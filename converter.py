@@ -15,11 +15,11 @@ class Chromosome_fragment_bedGraph(object):
 		self.value = float(string.split()[3])
 
 
-def write_to_output_wiggle(path, file_name, changed_track, chromosome_name, list_of_fragments):
+def write_to_output_wiggle(path, file_name, changed_track, chromosome_name, list_of_fragments, span):
 	dir_name = os.path.dirname(path)
 	output_file = open ("%s/%s.wig" % (dir_name, file_name),"a+")
 	output_file.write(changed_track)
-	output_file.write("variableStep chrom=%s\n" % chromosome_name)
+	output_file.write("variableStep chrom=%s span=%d\n" % (chromosome_name, span))
 	for fragment in list_of_fragments:
 		output_file.write("%d %.2f\n" % (fragment.start + 1, fragment.value))
 	output_file.close()
@@ -35,12 +35,15 @@ def convert_file(path, file_name):
 	if format == "bedGraph":
 		changed_track = track_line[:match.start()]+"type=wiggle_0"+track_line[match.end():]
 		list_of_fragments = []
+		span_list = []
 		for line in lines[1:]:
 			chromosome_fragment = Chromosome_fragment_bedGraph(line)
 			chromosome_name = chromosome_fragment.name
+			span_list.append(chromosome_fragment.end - chromosome_fragment.start)
 
 			list_of_fragments.append(chromosome_fragment)
-		write_to_output_wiggle(path, file_name, changed_track,chromosome_name, list_of_fragments)
+		span = min(span_list)
+		write_to_output_wiggle(path, file_name, changed_track,chromosome_name, list_of_fragments, span)
 
 
 	elif format == "wiggle_0":
